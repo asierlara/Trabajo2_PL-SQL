@@ -129,9 +129,24 @@ END;
     transacciones controladas con COMMIT y ROLLBACK adecuados, y en el diseño cuidadoso de la lógica 
     para anticipar y manejar situaciones de error.
     */
---
--- * P4.5
--- 
+
+    /*
+    P4.5: Otra estrategia podría ser el uso de procedimientos almacenados con transacciones serializables 
+    o el uso de mecanismos de bloqueo más granulares. Esto podría implicar ajustar el nivel de 
+    aislamiento de la transacción para serializable, asegurando que cada transacción se ejecute con la 
+    visión completa de los datos como si fuera la única en el sistema en ese momento. 
+
+    Pseudocódigo:
+    BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    -- Verificar la existencia del cliente y del evento, y que el evento no ha pasado.
+    -- Comprobar saldo del abono y asientos disponibles.
+    -- Si pasa todas las comprobaciones, realizar la reserva.
+    -- Actualizar el saldo del abono, los asientos disponibles y añadir la reserva.
+    COMMIT TRANSACTION;
+
+    Esta aproximación minimiza los problemas de concurrencia pero puede aumentar el tiempo de espera 
+    para el bloqueo de recursos, lo que podría no ser ideal en sistemas con alta demanda.
+    */
 
 
 create or replace
