@@ -20,3 +20,17 @@ Se presenta el caso de una empresa de eventos que organiza un festival de músic
 - **seq_reservas**: Genera claves primarias para la tabla de reservas.
 Se proporciona un script (reservaEvento_enun.sql) que crea las tablas, secuencias y procedimientos almacenados necesarios.
 
+## Objetivos
+
+- Implementar una transacción PL/SQL para reservar plaza en un evento del festival.
+- Desarrollar una serie de comprobaciones para garantizar la validez de las reservas, incluyendo la disponibilidad de asientos y el saldo de los abonos.
+- Manejar excepciones específicas relacionadas con la reserva de eventos.
+- Asegurar la consistencia de las operaciones de reserva mediante el adecuado manejo de transacciones.
+- Implementar una batería de tests para validar la funcionalidad desarrollada.
+
+## Procedimientos Almacenados
+
+- `reset_seq(p_seq_name varchar)`: Resetea las secuencias.
+- `inicializa_test`: Reinicia el contenido de la base de datos con filas de prueba.
+- `test_reserva_evento`: Procedimiento almacenado con tests automáticos.
+
