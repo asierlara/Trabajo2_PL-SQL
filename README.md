@@ -33,4 +33,5 @@ Se proporciona un script (reservaEvento_enun.sql) que crea las tablas, secuencia
 - `reset_seq(p_seq_name varchar)`: Resetea las secuencias.
 - `inicializa_test`: Reinicia el contenido de la base de datos con filas de prueba.
 - `test_reserva_evento`: Procedimiento almacenado con tests automáticos.
+- `reservar_evento(arg_NIF_cliente varchar, arg_nombre_evento varchar, arg_fecha date)`: Permite a un cliente reservar un evento, aplicando las validaciones necesarias y actualizando las tablas correspondientes.
 
