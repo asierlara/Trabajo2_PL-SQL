@@ -57,6 +57,7 @@ IS
     v_evento_id NUMBER;
     v_evento_fecha DATE;
     v_asientos_disponibles NUMBER;
+    v_saldo_abono NUMBER;
 BEGIN
     -- Comprobar si el cliente existe
     SELECT COUNT(*) INTO v_cliente_exist FROM clientes WHERE NIF = arg_NIF_cliente;
@@ -65,7 +66,7 @@ BEGIN
     END IF;
     
     -- Comprobar si el evento existe y obtener sus datos
-    SELECT id_evento, fecha INTO v_evento_id, v_evento_fecha
+    SELECT id_evento, fecha, asientos_disponibles INTO v_evento_id, v_evento_fecha, v_asientos_disponibles
     FROM eventos WHERE nombre_evento = arg_nombre_evento AND fecha = arg_fecha;
     
     -- Comprobar si el evento ha pasado
@@ -73,16 +74,31 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'No se pueden reservar eventos pasados.');
     END IF;
     
-    -- Comprobar si hay asientos disponibles
-    IF v_asientos_disponibles = 0 THEN
-        RAISE_APPLICATION_ERROR(-20005, 'No hay asientos disponibles');
+    -- Comprobar si hay asientos disponibles y el saldo del abono
+    -- Se asume que el abono está directamente relacionado con el NIF del cliente y es único.
+    SELECT saldo INTO v_saldo_abono FROM abonos WHERE cliente = arg_NIF_cliente;
+    IF v_asientos_disponibles = 0 OR v_saldo_abono = 0 THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Saldo en abono insuficiente o no hay asientos disponibles');
+    END IF;
+    
+    -- Si se pasan todas las comprobaciones, actualizar saldo, asientos y crear la reserva
+    -- Actualizar saldo en abono
+    UPDATE abonos SET saldo = saldo - 1 WHERE cliente = arg_NIF_cliente;
+    
+    -- Actualizar asientos disponibles
+    UPDATE eventos SET asientos_disponibles = asientos_disponibles - 1 WHERE id_evento = v_evento_id;
+    
+    -- Insertar la reserva
+    INSERT INTO reservas (id_reserva, cliente, evento, abono, fecha)
+    VALUES (seq_reservas.NEXTVAL, arg_NIF_cliente, v_evento_id, (SELECT id_abono FROM abonos WHERE cliente = arg_NIF_cliente), SYSDATE);
+    
+    COMMIT;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RAISE_APPLICATION_ERROR(-20003, 'El evento ' || arg_nombre_evento || ' no existe');
-    END IF;
-
 END;
 /
+
 
 ------ Deja aquí tus respuestas a las preguntas del enunciado:
 -- * P4.1
