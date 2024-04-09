@@ -15,9 +15,9 @@ Se presenta el caso de una empresa de eventos que organiza un festival de músic
 4. **Reservas**: Guarda las reservas realizadas por los clientes.
 
 ## Secuencias:
-- **seq_abonos**: Genera claves primarias para la tabla de abonos.
-- **seq_evento**: Genera claves primarias para la tabla de eventos.
-- **seq_reservas**: Genera claves primarias para la tabla de reservas.
+- `seq_abonos`: Genera claves primarias para la tabla de abonos.
+- `seq_evento`: Genera claves primarias para la tabla de eventos.
+- `seq_reservas`: Genera claves primarias para la tabla de reservas.
 Se proporciona un script (reservaEvento_enun.sql) que crea las tablas, secuencias y procedimientos almacenados necesarios.
 
 ## Objetivos
