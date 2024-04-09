@@ -202,13 +202,19 @@ exec inicializa_test;
 -- Completa el test
 
 create or replace procedure test_reserva_evento is
-begin
-	 
-  --caso 1 Reserva correcta, se realiza
-  begin
-    inicializa_test;
-  end;
-  
+    -- Variable para capturar los mensajes de error
+    v_error_msg VARCHAR2(4000);
+BEGIN
+    -- Caso 1: Reserva correcta, se realiza
+    BEGIN
+        inicializa_test;
+        -- Intenta realizar una reserva correcta
+        reservar_evento('12345678A', 'concierto_la_moda', TO_DATE('2024-06-27', 'YYYY-MM-DD'));
+        DBMS_OUTPUT.PUT_LINE('Caso 1: Reserva correcta, se realiza - PASÓ');
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Caso 1: Falló - ' || SQLERRM);
+    END;
   
   --caso 2 Evento pasado
   begin
