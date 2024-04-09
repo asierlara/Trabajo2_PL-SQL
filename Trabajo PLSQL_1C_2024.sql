@@ -101,10 +101,25 @@ END;
 
 
 ------ Deja aquí tus respuestas a las preguntas del enunciado:
--- * P4.1
---
--- * P4.2
---
+    /*
+    P4.1: La fiabilidad de la comprobación en el paso 2 puede verse comprometida al llegar al paso 3 
+    debido a operaciones concurrentes. Aunque se verifique la disponibilidad y el saldo en el paso 2,
+    estas condiciones pueden cambiar antes de que se efectúe la reserva en el paso 3 por otras 
+    transacciones que se comprometan (commit) en el ínterin, especialmente en un entorno de alta 
+    concurrencia. Esto se debe al fenómeno conocido como "lecturas no repetibles" o "condiciones de 
+    carrera", donde los datos leídos en una transacción cambian antes de que esta termine debido a 
+    otras transacciones.
+    */
+
+    /*
+    P4.2: Sí, la ejecución concurrente del procedimiento 'reservar_evento' puede llevar a situaciones 
+    donde, después de pasar las comprobaciones iniciales, otras instancias del mismo procedimiento (o 
+    diferentes transacciones) modifiquen los datos (como el saldo del abono o los asientos disponibles 
+    del evento) antes de que se realice la reserva. Esto podría resultar en reservas que sobrepasen la 
+    capacidad del evento o que utilicen saldo de abono que ya no está disponible. Este problema se 
+    relaciona con el concepto de aislamiento en transacciones de bases de datos.
+    */
+	
 -- * P4.3
 --
 -- * P4.4
