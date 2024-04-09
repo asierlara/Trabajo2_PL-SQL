@@ -56,7 +56,7 @@ IS
     v_cliente_exist NUMBER;
     v_evento_id NUMBER;
     v_evento_fecha DATE;
-    
+    v_asientos_disponibles NUMBER;
 BEGIN
     -- Comprobar si el cliente existe
     SELECT COUNT(*) INTO v_cliente_exist FROM clientes WHERE NIF = arg_NIF_cliente;
@@ -68,7 +68,19 @@ BEGIN
     SELECT id_evento, fecha INTO v_evento_id, v_evento_fecha
     FROM eventos WHERE nombre_evento = arg_nombre_evento AND fecha = arg_fecha;
     
+    -- Comprobar si el evento ha pasado
+    IF v_evento_fecha < SYSDATE THEN
+        RAISE_APPLICATION_ERROR(-20001, 'No se pueden reservar eventos pasados.');
+    END IF;
     
+    -- Comprobar si hay asientos disponibles
+    IF v_asientos_disponibles = 0 THEN
+        RAISE_APPLICATION_ERROR(-20005, 'No hay asientos disponibles');
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20003, 'El evento ' || arg_nombre_evento || ' no existe');
+    END IF;
+
 END;
 /
 
