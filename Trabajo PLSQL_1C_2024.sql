@@ -120,9 +120,15 @@ END;
     relaciona con el concepto de aislamiento en transacciones de bases de datos.
     */
 	
--- * P4.3
---
--- * P4.4
+    /*
+    P4.3 y P4.4: La estrategia de programación utilizada se centra en el manejo de concurrencia a través 
+    del uso de bloqueos explícitos o "FOR UPDATE" en las consultas SELECT, cuando es aplicable, para 
+    prevenir condiciones de carrera. Además, se emplean verificaciones de existencia y estado antes de 
+    proceder a la actualización de datos, y el manejo de excepciones para asegurar la integridad de los 
+    datos y proporcionar retroalimentación específica sobre errores. Este enfoque se refleja en el uso de 
+    transacciones controladas con COMMIT y ROLLBACK adecuados, y en el diseño cuidadoso de la lógica 
+    para anticipar y manejar situaciones de error.
+    */
 --
 -- * P4.5
 -- 
