@@ -1,3 +1,7 @@
+/*
+Autores: Asier Lara Arroyo, Mirhan Futsi Segura, Raul Mensat Martínez.
+Enlace gitub: https://github.com/asierlara/Trabajo2_PL-SQL.git
+*/
 drop table clientes cascade constraints;
 drop table abonos   cascade constraints;
 drop table eventos  cascade constraints;
