@@ -251,15 +251,36 @@ BEGIN
     END;
   
 
-  --caso 4 Cliente inexistente  
-  begin
-    inicializa_test;
-  end;
-  
-  --caso 5 El cliente no tiene saldo suficiente
-  begin
-    inicializa_test;
-  end;
+  -- Caso 4: Cliente inexistente
+    BEGIN
+        inicializa_test;
+        -- Intenta realizar una reserva con un cliente inexistente
+        reservar_evento('NIF_Fantasma', 'concierto_la_moda', TO_DATE('2024-06-27', 'YYYY-MM-DD'));
+    EXCEPTION
+        WHEN OTHERS THEN
+            v_error_msg := SQLERRM;
+            IF SQLCODE = -20002 THEN
+                DBMS_OUTPUT.PUT_LINE('Caso 4: Cliente inexistente - PASÓ');
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Caso 4: Falló - ' || v_error_msg);
+            END IF;
+    END;
+    
+    -- Caso 5: El cliente no tiene saldo suficiente
+    BEGIN
+        inicializa_test;
+        -- Intenta realizar una reserva con un cliente que no tiene saldo suficiente
+        reservar_evento('11111111B', 'teatro_impro', TO_DATE('2024-07-01', 'YYYY-MM-DD'));
+    EXCEPTION
+        WHEN OTHERS THEN
+            v_error_msg := SQLERRM;
+            IF SQLCODE = -20004 THEN
+                DBMS_OUTPUT.PUT_LINE('Caso 5: Saldo en abono insuficiente - PASÓ');
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Caso 5: Falló - ' || v_error_msg);
+            END IF;
+    END;
+
 
   
 end;
