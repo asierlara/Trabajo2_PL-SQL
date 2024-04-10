@@ -216,15 +216,35 @@ BEGIN
             DBMS_OUTPUT.PUT_LINE('Caso 1: Falló - ' || SQLERRM);
     END;
   
-  --caso 2 Evento pasado
-  begin
-    inicializa_test;
-  end;
-  
-  --caso 3 Evento inexistente
-  begin
-    inicializa_test;
-  end;
+  -- Caso 2: Evento pasado
+    BEGIN
+        inicializa_test;
+        -- Intenta realizar una reserva para un evento pasado
+        reservar_evento('12345678A', 'evento_pasado', TO_DATE('2022-06-27', 'YYYY-MM-DD'));
+    EXCEPTION
+        WHEN OTHERS THEN
+            v_error_msg := SQLERRM;
+            IF SQLCODE = -20001 THEN
+                DBMS_OUTPUT.PUT_LINE('Caso 2: Evento pasado - PASÓ');
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Caso 2: Falló - ' || v_error_msg);
+            END IF;
+    END;
+    
+    -- Caso 3: Evento inexistente
+    BEGIN
+        inicializa_test;
+        -- Intenta realizar una reserva para un evento inexistente
+        reservar_evento('12345678A', 'evento_fantasma', TO_DATE('2024-06-27', 'YYYY-MM-DD'));
+    EXCEPTION
+        WHEN OTHERS THEN
+            v_error_msg := SQLERRM;
+            IF SQLCODE = -20003 THEN
+                DBMS_OUTPUT.PUT_LINE('Caso 3: Evento inexistente - PASÓ');
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Caso 3: Falló - ' || v_error_msg);
+            END IF;
+    END;
   
 
   --caso 4 Cliente inexistente  
