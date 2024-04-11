@@ -35,3 +35,21 @@ Se proporciona un script (reservaEvento_enun.sql) que crea las tablas, secuencia
 - `test_reserva_evento`: Procedimiento almacenado con tests automáticos.
 - `reservar_evento(arg_NIF_cliente varchar, arg_nombre_evento varchar, arg_fecha date)`: Permite a un cliente reservar un evento, aplicando las validaciones necesarias y actualizando las tablas correspondientes.
 
+## Trabajo por alumno
+
+**Mirhan Futsi**: 
+- Creación de reservar_evento con primeras variables y la comprobación de si existe tanto el cliente como el evento. 
+- Preguntas número 1 y 2.
+- Casos del test número 1.
+
+**Asier Lara**: 
+- Continuación de reservar_evento, añadiendo la comprobación de si el evento ha pasado, si hay asientos disponibles y la excepción.
+- Preguntas número 3 y 4.
+- Casos del test número 2 y 3.
+- Corrección del caso 2 y el correcto tratamiento de excepciones.
+
+**Raúl Mensat**: 
+- Continuación de reservar_evento, añadiendo comprobación del saldo disponible, las actualizaciones de saldo y asientos y los inserts a la reserva.
+- Pregunta número 5.
+- Casos del test número 4 y 5.
+- Creación del readme
