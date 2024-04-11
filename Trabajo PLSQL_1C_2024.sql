@@ -57,6 +57,7 @@ CREATE OR REPLACE PROCEDURE reservar_evento(
     arg_nombre_evento VARCHAR,
     arg_fecha DATE)
 IS
+    -- Variables locales para almacenar resultados de consultas y cálculos
     v_cliente_exist NUMBER;
     v_evento_id NUMBER;
     v_evento_fecha DATE;
@@ -92,12 +93,14 @@ BEGIN
     -- Actualizar asientos disponibles
     UPDATE eventos SET asientos_disponibles = asientos_disponibles - 1 WHERE id_evento = v_evento_id;
     
-    -- Insertar la reserva
+    -- Insertar la reserva en la tabla de reservas
     INSERT INTO reservas (id_reserva, cliente, evento, abono, fecha)
     VALUES (seq_reservas.NEXTVAL, arg_NIF_cliente, v_evento_id, (SELECT id_abono FROM abonos WHERE cliente = arg_NIF_cliente), SYSDATE);
-    
+
+    -- Confirmar la transacción
     COMMIT;
 EXCEPTION
+    -- Manejar excepciones personalizadas y proporcionar mensajes de error
     WHEN NO_DATA_FOUND THEN
         RAISE_APPLICATION_ERROR(-20003, 'El evento ' || arg_nombre_evento || ' no existe');
 END;
@@ -272,9 +275,13 @@ BEGIN
         -- Intenta realizar una reserva con un cliente que no tiene saldo suficiente
         reservar_evento('11111111B', 'teatro_impro', TO_DATE('2024-07-01', 'YYYY-MM-DD'));
     EXCEPTION
+	-- Manejar cualquier excepción que pueda surgir
         WHEN OTHERS THEN
+	    
             v_error_msg := SQLERRM;
+	    -- Verificar si el error es debido a saldo insuficiente en el abono
             IF SQLCODE = -20004 THEN
+	    -- Impresión de mensajes según la condición previa
                 DBMS_OUTPUT.PUT_LINE('Caso 5: Saldo en abono insuficiente - PASÓ');
             ELSE
                 DBMS_OUTPUT.PUT_LINE('Caso 5: Falló - ' || v_error_msg);
