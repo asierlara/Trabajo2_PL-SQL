@@ -180,7 +180,7 @@ begin
     execute immediate
     'alter sequence ' || p_seq_name || ' increment by 1 minvalue 0';
 
-end;
+END;
 /
 
 
@@ -208,7 +208,7 @@ begin
     insert into eventos values ( seq_eventos.nextval, 'teatro_impro', date '2024-7-1', 50);
        
     commit;
-end;
+END;
 /
 
 exec inicializa_test;
