@@ -57,12 +57,12 @@ CREATE OR REPLACE PROCEDURE reservar_evento(
     arg_nombre_evento VARCHAR,
     arg_fecha DATE)
 IS
-    -- Variables locales para almacenar resultados de consultas y cálculos
+    -- Variables para verificar la existencia y estado del evento y el cliente.
     v_cliente_exist NUMBER;
     v_evento_id NUMBER;
-    v_evento_fecha DATE;
     v_asientos_disponibles NUMBER;
     v_saldo_abono NUMBER;
+    v_evento_encontrado BOOLEAN := FALSE;
 BEGIN
     -- Comprobar si el cliente existe
     SELECT COUNT(*) INTO v_cliente_exist FROM clientes WHERE NIF = arg_NIF_cliente;
@@ -70,48 +70,55 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20002, 'Cliente inexistente');
     END IF;
     
-    -- Comprobar si el evento existe y obtener sus datos
-    SELECT id_evento, fecha, asientos_disponibles INTO v_evento_id, v_evento_fecha, v_asientos_disponibles
-    FROM eventos WHERE nombre_evento = arg_nombre_evento AND fecha = arg_fecha;
-    
-    -- Comprobar si el evento ha pasado
-    IF v_evento_fecha < SYSDATE THEN
+    -- Comprobar si la fecha del evento ya ha pasado
+    IF arg_fecha < SYSDATE THEN
         RAISE_APPLICATION_ERROR(-20001, 'No se pueden reservar eventos pasados.');
     END IF;
     
+    -- Comprobar si el evento existe y obtener sus datos
+    BEGIN
+        SELECT id_evento, asientos_disponibles INTO v_evento_id, v_asientos_disponibles
+        FROM eventos WHERE nombre_evento = arg_nombre_evento AND fecha = arg_fecha;
+        v_evento_encontrado := TRUE;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            v_evento_encontrado := FALSE;
+    END;
+
+    -- Lanzar error si el evento no existe
+    IF NOT v_evento_encontrado THEN
+        RAISE_APPLICATION_ERROR(-20003, 'El evento ' || arg_nombre_evento || ' no existe');
+    END IF;
+
     -- Comprobar si hay asientos disponibles y el saldo del abono
-    -- Se asume que el abono está directamente relacionado con el NIF del cliente y es único.
     SELECT saldo INTO v_saldo_abono FROM abonos WHERE cliente = arg_NIF_cliente;
-    IF v_asientos_disponibles = 0 OR v_saldo_abono = 0 THEN
+    IF v_asientos_disponibles <= 0 OR v_saldo_abono <= 0 THEN
         RAISE_APPLICATION_ERROR(-20004, 'Saldo en abono insuficiente o no hay asientos disponibles');
     END IF;
     
     -- Si se pasan todas las comprobaciones, actualizar saldo, asientos y crear la reserva
-    -- Actualizar saldo en abono
     UPDATE abonos SET saldo = saldo - 1 WHERE cliente = arg_NIF_cliente;
-    
-    -- Actualizar asientos disponibles
     UPDATE eventos SET asientos_disponibles = asientos_disponibles - 1 WHERE id_evento = v_evento_id;
-    
-    -- Insertar la reserva en la tabla de reservas
     INSERT INTO reservas (id_reserva, cliente, evento, abono, fecha)
     VALUES (seq_reservas.NEXTVAL, arg_NIF_cliente, v_evento_id, (SELECT id_abono FROM abonos WHERE cliente = arg_NIF_cliente), SYSDATE);
-
-    -- Confirmar la transacción
+    
     COMMIT;
 EXCEPTION
-    -- Manejar excepciones personalizadas y proporcionar mensajes de error
-    WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(-20003, 'El evento ' || arg_nombre_evento || ' no existe');
+    WHEN OTHERS THEN
+        -- Imprimir el código y mensaje de error.
+        DBMS_OUTPUT.PUT_LINE('Error: SQLCODE=' || SQLCODE || ' SQLERRM=' || SQLERRM);
+        -- Relanzar la excepción para no perder la información sobre la misma.
+        RAISE;
 END;
 /
 
 
+
 ------ Deja aquí tus respuestas a las preguntas del enunciado:
-    /*
-    P4.1: La fiabilidad de la comprobación en el paso 2 puede verse comprometida al llegar al paso 3 
-    debido a operaciones concurrentes. Aunque se verifique la disponibilidad y el saldo en el paso 2,
-    estas condiciones pueden cambiar antes de que se efectúe la reserva en el paso 3 por otras 
+/*
+    P4.1: La fiabilidad de la comprobación en el paso 2 hacia el paso 3 puede verse afectada por 
+    operaciones concurrentes. Aunque se verifique la disponibilidad y el saldo en el paso 2, estas 
+    condiciones pueden cambiar antes de que se efectúe la reserva en el paso 3 debido a otras 
     transacciones que se comprometan (commit) en el ínterin, especialmente en un entorno de alta 
     concurrencia. Esto se debe al fenómeno conocido como "lecturas no repetibles" o "condiciones de 
     carrera", donde los datos leídos en una transacción cambian antes de que esta termine debido a 
@@ -126,7 +133,7 @@ END;
     capacidad del evento o que utilicen saldo de abono que ya no está disponible. Este problema se 
     relaciona con el concepto de aislamiento en transacciones de bases de datos.
     */
-	
+
     /*
     P4.3 y P4.4: La estrategia de programación utilizada se centra en el manejo de concurrencia a través 
     del uso de bloqueos explícitos o "FOR UPDATE" en las consultas SELECT, cuando es aplicable, para 
@@ -199,10 +206,7 @@ begin
     
     insert into eventos values ( seq_eventos.nextval, 'concierto_la_moda', date '2024-6-27', 200);
     insert into eventos values ( seq_eventos.nextval, 'teatro_impro', date '2024-7-1', 50);
-
-    -- Caso 2: Hacemos un evento pasado
-    insert into eventos values (seq_eventos.nextval, 'evento_pasado', date '2022-06-27', 100);
-
+       
     commit;
 end;
 /
@@ -225,21 +229,22 @@ BEGIN
         WHEN OTHERS THEN
             DBMS_OUTPUT.PUT_LINE('Caso 1: Falló - ' || SQLERRM);
     END;
-  
-  -- Caso 2: Evento pasado
-    BEGIN
-        inicializa_test;
-        -- Intenta realizar una reserva para un evento pasado
-        reservar_evento('12345678A', 'evento_pasado', TO_DATE('2022-06-27', 'YYYY-MM-DD'));
-    EXCEPTION
-        WHEN OTHERS THEN
-            v_error_msg := SQLERRM;
-            IF SQLCODE = -20001 THEN
-                DBMS_OUTPUT.PUT_LINE('Caso 2: Evento pasado - PASÓ');
-            ELSE
-                DBMS_OUTPUT.PUT_LINE('Caso 2: Falló - ' || v_error_msg);
-            END IF;
-    END;
+    
+   -- Caso 2: Evento pasado
+BEGIN
+    inicializa_test;
+    -- Aunque el evento 'concierto_la_moda' existe para '2024-06-27', intentamos reservarlo para una fecha pasada
+    -- Esto debería lanzar el error esperado por intentar reservar un evento pasado.
+    reservar_evento('12345678A', 'concierto_la_moda', TO_DATE('2022-06-27', 'YYYY-MM-DD'));
+EXCEPTION
+    WHEN OTHERS THEN
+        v_error_msg := SQLERRM;
+        IF SQLCODE = -20001 THEN
+            DBMS_OUTPUT.PUT_LINE('Caso 2: Evento pasado - PASÓ');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Caso 2: Falló - ' || v_error_msg);
+        END IF;
+END;
     
     -- Caso 3: Evento inexistente
     BEGIN
@@ -255,9 +260,8 @@ BEGIN
                 DBMS_OUTPUT.PUT_LINE('Caso 3: Falló - ' || v_error_msg);
             END IF;
     END;
-  
-
-  -- Caso 4: Cliente inexistente
+    
+    -- Caso 4: Cliente inexistente
     BEGIN
         inicializa_test;
         -- Intenta realizar una reserva con un cliente inexistente
@@ -278,22 +282,15 @@ BEGIN
         -- Intenta realizar una reserva con un cliente que no tiene saldo suficiente
         reservar_evento('11111111B', 'teatro_impro', TO_DATE('2024-07-01', 'YYYY-MM-DD'));
     EXCEPTION
-	-- Manejar cualquier excepción que pueda surgir
         WHEN OTHERS THEN
-	    
             v_error_msg := SQLERRM;
-	    -- Verificar si el error es debido a saldo insuficiente en el abono
             IF SQLCODE = -20004 THEN
-	    -- Impresión de mensajes según la condición previa
                 DBMS_OUTPUT.PUT_LINE('Caso 5: Saldo en abono insuficiente - PASÓ');
             ELSE
                 DBMS_OUTPUT.PUT_LINE('Caso 5: Falló - ' || v_error_msg);
             END IF;
     END;
-
-
-  
-end;
+END;
 /
 
 
