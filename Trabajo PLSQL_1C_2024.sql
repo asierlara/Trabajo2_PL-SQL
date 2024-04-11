@@ -200,6 +200,9 @@ begin
     insert into eventos values ( seq_eventos.nextval, 'concierto_la_moda', date '2024-6-27', 200);
     insert into eventos values ( seq_eventos.nextval, 'teatro_impro', date '2024-7-1', 50);
 
+    -- Caso 2: Hacemos un evento pasado
+    insert into eventos values (seq_eventos.nextval, 'evento_pasado', date '2022-06-27', 100);
+
     commit;
 end;
 /
